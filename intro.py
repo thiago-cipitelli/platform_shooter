@@ -2,20 +2,29 @@ import pgzrun
 import random
 import math
 
+# TODO: tela de inicio
+# TODO: tela de fim
+# TODO: ataque
+# TODO: powerup
+# TODO: score
+
+
 WIDTH = 1920
 HEIGHT = 1080
 PLAYER_SPEED = 3
+ATTACK_SPEED = 0.1
 ENEMY_SPEED = 1
 ENEMY_SPAWN_SPEED = 10
 SLASH_DURATION = 0.15
 
-player = Actor("player", pos=(WIDTH / 2, HEIGHT / 2))
+player = Actor("player", pos=(WIDTH / 20, HEIGHT / 20))
+slash = Actor("atack01", (-150, -150))
 player.life = 3
 player.can_take_damage = True
-slashes = []
+player.can_attack = True
 lifes = []
 for i in range(player.life):
-    lifes.append(Actor("hud_heart", topleft=(i * 40, 0)))
+    lifes.append(Actor("hud_heart", topleft=(i * 50, 0)))
 
 enemies = []
 
@@ -40,6 +49,10 @@ def lose_life():
 
 def reset_damage_cooldown():
     player.can_take_damage = True
+
+
+def reset_attack_cooldown():
+    player.can_attack = True
 
 
 def enemy_move():
@@ -69,13 +82,26 @@ def player_move():
 
 
 def on_mouse_down(pos, button):
+    if player.can_attack:
+        attack(pos)
+
+
+def attack(pos):
+    player.can_attack = False
     angle = math.atan2(pos[1] - player.y, pos[0] - player.x)
     distance = 50
+    slash.x = player.x
+    slash.y = player.y
+    slash.angle = angle * (-180 / math.pi)
     x = player.x + math.cos(angle) * distance
     y = player.y + math.sin(angle) * distance
-    slash = Rect((x - 15, y - 15), (30, 30))
-    slashes.append(slash)
-    clock.schedule_unique(lambda: slashes.remove(slash), SLASH_DURATION)
+    animate(slash, pos=(x, y), duration=0.1, tween="linear", on_finished=finish_attack)
+    clock.schedule_unique(reset_attack_cooldown, ATTACK_SPEED)
+
+
+def finish_attack():
+    slash.x = -100
+    slash.y = -100
 
 
 def update():
@@ -90,8 +116,7 @@ def draw():
     for enemy in enemies:
         enemy.draw()
     player.draw()
-    for slash in slashes:
-        screen.draw.filled_rect(slash, (255, 255, 255))
+    slash.draw()
 
 
 clock.schedule_unique(spawn_enemy, 1.0)
