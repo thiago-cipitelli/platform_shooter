@@ -2,10 +2,6 @@ import pgzrun
 import random
 import math
 
-# TODO: tela de inicio
-# TODO: tela de fim
-
-# ROGUE ALIENS
 
 WIDTH = 1920
 HEIGHT = 1080
