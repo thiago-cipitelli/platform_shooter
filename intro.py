@@ -6,26 +6,33 @@ import math
 # TODO: tela de fim
 # TODO: powerup
 
+# ROGUE ALIENS
 
 WIDTH = 1920
 HEIGHT = 1080
-PLAYER_SPEED = 3
-ATTACK_SPEED = 0.1
+PLAYER_SPEED = 2
+ATTACK_SPEED = 1
 ENEMY_SPEED = 1
 ENEMY_SPAWN_SPEED = 5
 SLASH_DURATION = 0.15
 
 score = 0
 player = Actor("player", pos=(WIDTH / 20, HEIGHT / 20))
-slash = Actor("atack01", (-150, -150))
+slash = Actor("atack03", (-150, -150))
 player.life = 3
 player.can_take_damage = True
 player.can_attack = True
+
+player.range_boost = 1.0
+player.speed_boost = 1.0
+player.cooldown_boost = 1.0
+
 lifes = []
 for i in range(player.life):
     lifes.append(Actor("hud_heart", topleft=(i * 50, 5)))
 
 enemies = []
+powerups = []
 
 
 def spawn_enemy():
@@ -72,13 +79,18 @@ def enemy_move():
 
 def player_move():
     if keyboard.left:
-        player.x -= PLAYER_SPEED
+        player.x -= min(7, PLAYER_SPEED * player.speed_boost)
     if keyboard.right:
-        player.x += PLAYER_SPEED
+        player.x += min(7, PLAYER_SPEED * player.speed_boost)
     if keyboard.up:
-        player.y -= PLAYER_SPEED
+        player.y -= min(7, PLAYER_SPEED * player.speed_boost)
     if keyboard.down:
-        player.y += PLAYER_SPEED
+        player.y += min(7, PLAYER_SPEED * player.speed_boost)
+
+    for boost in powerups:
+        if player.colliderect(boost):
+            collect_upgrade(boost.image)
+            powerups.remove(boost)
 
     player.x = max(player.width / 2, min(WIDTH - player.width / 2, player.x))
     player.y = max(player.height / 2, min(HEIGHT - player.height / 2, player.y))
@@ -92,14 +104,16 @@ def on_mouse_down(pos, button):
 def attack(pos):
     player.can_attack = False
     angle = math.atan2(pos[1] - player.y, pos[0] - player.x)
-    distance = 50
+    distance = min(150, 50 * player.range_boost)
     slash.x = player.x
     slash.y = player.y
     slash.angle = angle * (-180 / math.pi)
     x = player.x + math.cos(angle) * distance
     y = player.y + math.sin(angle) * distance
     animate(slash, pos=(x, y), duration=0.1, tween="linear", on_finished=finish_attack)
-    clock.schedule_unique(reset_attack_cooldown, ATTACK_SPEED)
+    clock.schedule_unique(
+        reset_attack_cooldown, max(0.1, ATTACK_SPEED - player.cooldown_boost)
+    )
 
 
 def finish_attack():
@@ -107,13 +121,48 @@ def finish_attack():
     for enemy in enemies[:]:
         if enemy.colliderect(slash):
             score += 1
+            if score % 5 == 0:
+                spawn_upgrade()
             enemies.remove(enemy)
     slash.x = -100
     slash.y = -100
 
 
+def generate_random_boost():
+    boost_num = random.randint(0, 3)
+    match boost_num:
+        case 0:
+            return "attack_up"
+        case 1:
+            return "less_cooldown"
+        case 2:
+            return "speed_up"
+        case _:
+            return "star"
+
+
+def collect_upgrade(boost):
+    if boost == "attack_up":
+        player.range_boost += 0.1
+
+    if boost == "less_cooldown":
+        player.cooldown_boost += 0.1
+
+    if boost == "speed_up":
+        player.speed_boost += 0.2
+
+    if boost == "star":
+        player.cooldown_boost += 0.2
+        player.range_boost += 0.2
+        player.speed_boost += 0.3
+
+
 def spawn_upgrade():
-    upgrade = Actor("")
+    x = random.randint(0, WIDTH)
+    y = random.randint(0, HEIGHT)
+    image = generate_random_boost()
+    print(image)
+    powerups.append(Actor(image, pos=(x, y)))
 
 
 def update():
@@ -134,14 +183,18 @@ def draw():
     screen.blit("bg", (0, 0))
     for heart in lifes:
         heart.draw()
+
     for enemy in enemies:
         enemy.draw()
+
+    for boost in powerups:
+        boost.draw()
     player.draw()
     slash.draw()
     screen.draw.text(
         f"Score: {score}", center=(WIDTH / 2, 40), fontsize=50, color="white"
     )
-    tutorial()
+    # tutorial()
 
 
 clock.schedule_unique(spawn_enemy, 1.0)
