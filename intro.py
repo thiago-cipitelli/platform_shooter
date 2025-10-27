@@ -10,14 +10,15 @@ import math
 WIDTH = 1920
 HEIGHT = 1080
 PLAYER_SPEED = 2
-ATTACK_SPEED = 1
+ATTACK_SPEED = 1.5
 ENEMY_SPEED = 1
 ENEMY_SPAWN_SPEED = 5
 SLASH_DURATION = 0.15
 
-game_start = True
+game_start = False
+menu_screen = Actor("menu", center=(WIDTH / 2, HEIGHT / 2))
 score = 0
-player = Actor("player", pos=(WIDTH / 20, HEIGHT / 20))
+player = Actor("player", pos=(WIDTH / 2, HEIGHT / 2))
 slash = Actor("atack03", (-150, -150))
 player.life = 3
 player.can_take_damage = True
@@ -46,11 +47,13 @@ def spawn_enemy():
 
 
 def lose_life():
-    if player.life > 0:
+    if player.life > 1:
         player.life -= 1
         lifes[player.life].image = "hud_heart_empty"
         player.can_take_damage = False
         clock.schedule_unique(reset_damage_cooldown, 3.0)
+    else:
+        exit()
 
 
 def reset_damage_cooldown():
@@ -96,6 +99,17 @@ def player_move():
 
 
 def on_mouse_down(pos, button):
+    global game_start
+
+    if not game_start:
+        if pos[0] > 750 and pos[0] < 1160 and pos[1] > 470 and pos[1] < 590:
+            game_start = True
+            music.play_once("play")
+            return
+
+        if pos[0] > 765 and pos[0] < 1150 and pos[1] > 630 and pos[1] < 730:
+            exit()
+
     if player.can_attack:
         attack(pos)
 
@@ -109,6 +123,7 @@ def attack(pos):
     slash.angle = angle * (-180 / math.pi)
     x = player.x + math.cos(angle) * distance
     y = player.y + math.sin(angle) * distance
+    music.play_once("attack")
     animate(slash, pos=(x, y), duration=0.1, tween="linear", on_finished=finish_attack)
     clock.schedule_unique(
         reset_attack_cooldown, max(0.1, ATTACK_SPEED - player.cooldown_boost)
@@ -122,6 +137,7 @@ def finish_attack():
             score += 1
             if score % 5 == 0:
                 spawn_upgrade()
+            music.play_once("explosion")
             enemies.remove(enemy)
     slash.x = -100
     slash.y = -100
@@ -160,13 +176,13 @@ def spawn_upgrade():
     x = random.randint(0, WIDTH)
     y = random.randint(0, HEIGHT)
     image = generate_random_boost()
-    print(image)
     powerups.append(Actor(image, pos=(x, y)))
 
 
 def update():
-    player_move()
-    enemy_move()
+    if game_start:
+        player_move()
+        enemy_move()
 
 
 def tutorial():
@@ -176,6 +192,10 @@ def tutorial():
         fontsize=50,
         color="white",
     )
+
+
+def menu():
+    menu_screen.draw()
 
 
 def game():
@@ -225,7 +245,8 @@ def draw():
     screen.fill((123, 201, 89))
     if game_start:
         game()
-    # tutorial()
+    else:
+        menu()
 
 
 clock.schedule_unique(spawn_enemy, 1.0)
