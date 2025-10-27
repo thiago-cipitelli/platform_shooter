@@ -100,6 +100,9 @@ def attack(pos):
 
 
 def finish_attack():
+    for enemy in enemies:
+        if enemy.colliderect(slash):
+            enemies.remove(enemy)
     slash.x = -100
     slash.y = -100
 
