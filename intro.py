@@ -4,7 +4,6 @@ import math
 
 # TODO: tela de inicio
 # TODO: tela de fim
-# TODO: powerup
 
 # ROGUE ALIENS
 
@@ -16,6 +15,7 @@ ENEMY_SPEED = 1
 ENEMY_SPAWN_SPEED = 5
 SLASH_DURATION = 0.15
 
+game_start = True
 score = 0
 player = Actor("player", pos=(WIDTH / 20, HEIGHT / 20))
 slash = Actor("atack03", (-150, -150))
@@ -30,7 +30,6 @@ player.cooldown_boost = 1.0
 lifes = []
 for i in range(player.life):
     lifes.append(Actor("hud_heart", topleft=(i * 50, 5)))
-
 enemies = []
 powerups = []
 
@@ -179,8 +178,7 @@ def tutorial():
     )
 
 
-def draw():
-    screen.blit("bg", (0, 0))
+def game():
     for heart in lifes:
         heart.draw()
 
@@ -191,9 +189,42 @@ def draw():
         boost.draw()
     player.draw()
     slash.draw()
+    draw_player_status()
+
+
+def calcula_percentagem(a, b):
+    a = min(b, (int(round(10 * (a - 1)))))
+    return int((a / b) * 100)
+
+
+def draw_player_status():
+    screen.draw.text(
+        f"speed: {calcula_percentagem(player.speed_boost, 70)}%",
+        topleft=(0, 60),
+        fontsize=50,
+        color="white",
+    )
+    screen.draw.text(
+        f"range: {calcula_percentagem(player.range_boost, 30)}%",
+        topleft=(0, 110),
+        fontsize=50,
+        color="white",
+    )
+    screen.draw.text(
+        f"attack speed: {calcula_percentagem(player.cooldown_boost, 9)}%",
+        topleft=(0, 160),
+        fontsize=50,
+        color="white",
+    )
     screen.draw.text(
         f"Score: {score}", center=(WIDTH / 2, 40), fontsize=50, color="white"
     )
+
+
+def draw():
+    screen.fill((123, 201, 89))
+    if game_start:
+        game()
     # tutorial()
 
 
