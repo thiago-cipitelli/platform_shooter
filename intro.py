@@ -17,6 +17,7 @@ ENEMY_SPEED = 1
 ENEMY_SPAWN_SPEED = 10
 SLASH_DURATION = 0.15
 
+score = 0
 player = Actor("player", pos=(WIDTH / 20, HEIGHT / 20))
 slash = Actor("atack01", (-150, -150))
 player.life = 3
@@ -24,7 +25,7 @@ player.can_take_damage = True
 player.can_attack = True
 lifes = []
 for i in range(player.life):
-    lifes.append(Actor("hud_heart", topleft=(i * 50, 0)))
+    lifes.append(Actor("hud_heart", topleft=(i * 50, 5)))
 
 enemies = []
 
@@ -100,8 +101,10 @@ def attack(pos):
 
 
 def finish_attack():
-    for enemy in enemies:
+    global score
+    for enemy in enemies[:]:
         if enemy.colliderect(slash):
+            score += 1
             enemies.remove(enemy)
     slash.x = -100
     slash.y = -100
@@ -120,6 +123,9 @@ def draw():
         enemy.draw()
     player.draw()
     slash.draw()
+    screen.draw.text(
+        f"Score: {score}", topleft=(WIDTH / 2, 20), fontsize=50, color="white"
+    )
 
 
 clock.schedule_unique(spawn_enemy, 1.0)
