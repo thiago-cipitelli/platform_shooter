@@ -4,9 +4,7 @@ import math
 
 # TODO: tela de inicio
 # TODO: tela de fim
-# TODO: ataque
 # TODO: powerup
-# TODO: score
 
 
 WIDTH = 1920
@@ -36,7 +34,8 @@ def spawn_enemy():
         y = random.randint(0, HEIGHT)
         if abs(x - player.x) > 200 and abs(y - player.y) > 200:
             break
-    enemies.append(Actor("enemy", pos=(x, y)))
+    num = random.randint(1, 2)
+    enemies.append(Actor(f"enemy_0{num}", pos=(x, y)))
     clock.schedule_unique(spawn_enemy, ENEMY_SPAWN_SPEED)
 
 
