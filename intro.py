@@ -12,7 +12,7 @@ HEIGHT = 1080
 PLAYER_SPEED = 3
 ATTACK_SPEED = 0.1
 ENEMY_SPEED = 1
-ENEMY_SPAWN_SPEED = 10
+ENEMY_SPAWN_SPEED = 5
 SLASH_DURATION = 0.15
 
 score = 0
@@ -36,7 +36,7 @@ def spawn_enemy():
             break
     num = random.randint(1, 2)
     enemies.append(Actor(f"enemy_0{num}", pos=(x, y)))
-    clock.schedule_unique(spawn_enemy, ENEMY_SPAWN_SPEED)
+    clock.schedule_unique(spawn_enemy, max(0.3, ENEMY_SPAWN_SPEED - (score / 10)))
 
 
 def lose_life():
@@ -80,6 +80,9 @@ def player_move():
     if keyboard.down:
         player.y += PLAYER_SPEED
 
+    player.x = max(player.width / 2, min(WIDTH - player.width / 2, player.x))
+    player.y = max(player.height / 2, min(HEIGHT - player.height / 2, player.y))
+
 
 def on_mouse_down(pos, button):
     if player.can_attack:
@@ -109,13 +112,26 @@ def finish_attack():
     slash.y = -100
 
 
+def spawn_upgrade():
+    upgrade = Actor("")
+
+
 def update():
     player_move()
     enemy_move()
 
 
+def tutorial():
+    screen.draw.text(
+        "controles: use as setas direcionais para se mover",
+        center=(WIDTH / 2, HEIGHT / 2),
+        fontsize=50,
+        color="white",
+    )
+
+
 def draw():
-    screen.fill((128, 0, 0))
+    screen.blit("bg", (0, 0))
     for heart in lifes:
         heart.draw()
     for enemy in enemies:
@@ -123,8 +139,9 @@ def draw():
     player.draw()
     slash.draw()
     screen.draw.text(
-        f"Score: {score}", topleft=(WIDTH / 2, 20), fontsize=50, color="white"
+        f"Score: {score}", center=(WIDTH / 2, 40), fontsize=50, color="white"
     )
+    tutorial()
 
 
 clock.schedule_unique(spawn_enemy, 1.0)
